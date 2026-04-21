@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeadsMax — AM Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;
+  --surface:#161921;
+  --surface2:#1e2230;
+  --surface3:#252a3a;
+  --border:#2a2f42;
+  --border2:#323852;
+  --text:#e8eaf0;
+  --text2:#8b90a8;
+  --text3:#555b72;
+  --accent:#4f7cff;
+  --accent2:#3d63e0;
+  --green:#22c55e;
+  --green-bg:rgba(34,197,94,.12);
+  --red:#ef4444;
+  --red-bg:rgba(239,68,68,.12);
+  --amber:#f59e0b;
+  --amber-bg:rgba(245,158,11,.12);
+  --purple:#a78bfa;
+  --purple-bg:rgba(167,139,250,.12);
+  --mono:'DM Mono',monospace;
+  --sans:'DM Sans',sans-serif;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* LAYOUT */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:220px;flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100}
+.main{margin-left:220px;flex:1;display:flex;flex-direction:column}
+
+/* SIDEBAR */
+.logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
+.logo-mark{font-size:13px;font-weight:600;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:4px}
+.logo-name{font-size:17px;font-weight:600;color:var(--text)}
+.logo-name span{color:var(--accent)}
+.nav{padding:16px 12px;flex:1}
+.nav-section{font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--text3);text-transform:uppercase;padding:0 8px;margin:16px 0 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:13.5px;color:var(--text2);cursor:pointer;transition:all .15s;text-decoration:none;margin-bottom:2px;position:relative}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:rgba(79,124,255,.15);color:var(--accent)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:var(--accent);border-radius:0 2px 2px 0}
+.nav-icon{width:16px;height:16px;opacity:.7;flex-shrink:0}
+.nav-item.active .nav-icon{opacity:1}
+.sidebar-bottom{padding:16px 12px;border-top:1px solid var(--border)}
+.avatar-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer}
+.avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#4f7cff,#a78bfa);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;flex-shrink:0}
+.avatar-info{min-width:0}
+.avatar-name{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar-role{font-size:11px;color:var(--text3)}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.page-title{font-size:16px;font-weight:600;color:var(--text)}
+.month-nav{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px}
+.month-btn{width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:14px}
+.month-btn:hover{background:var(--surface3);color:var(--text)}
+.month-label{font-size:13px;font-weight:500;color:var(--text);padding:0 8px;font-family:var(--mono);white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;font-family:var(--sans)}
+.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--surface2);color:var(--text);border-color:var(--border2)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent2)}
+.btn-sm{padding:5px 11px;font-size:12px}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* CONTENT */
+.content{padding:24px 28px;flex:1}
+
+/* STAT CARDS */
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.stat-label{font-size:11.5px;color:var(--text3);font-weight:500;letter-spacing:.03em;margin-bottom:8px}
+.stat-value{font-size:22px;font-weight:600;color:var(--text);font-family:var(--mono);letter-spacing:-.02em}
+.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:4px}
+.stat-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:2px 7px;border-radius:4px;margin-top:6px}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-blue{background:rgba(79,124,255,.15);color:var(--accent)}
+.badge-purple{background:var(--purple-bg);color:var(--purple)}
+.badge-neutral{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+
+/* TABLE SECTION */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-title{font-size:14px;font-weight:600;color:var(--text)}
+.section-sub{font-size:12px;color:var(--text3);margin-left:8px}
+.table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);padding:11px 14px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;background:var(--surface)}
+thead th:not(:first-child){text-align:right}
+tbody tr{border-bottom:1px solid var(--border);transition:background .12s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--surface2)}
+tbody tr.editing{background:rgba(79,124,255,.05);border-left:2px solid var(--accent)}
+td{padding:11px 14px;font-size:13px;vertical-align:middle}
+td:not(:first-child){text-align:right}
+.adv-name{font-weight:500;color:var(--text)}
+.adv-id{font-size:10.5px;color:var(--text3);font-family:var(--mono);margin-top:1px}
+.num{font-family:var(--mono);font-size:12.5px}
+.num-affise{color:var(--text2)}
+.num-confirmed{color:var(--text)}
+.num-positive{color:var(--green)}
+.num-negative{color:var(--red)}
+.num-empty{color:var(--text3)}
+
+/* INLINE INPUT */
+.inline-input{background:var(--surface3);border:1px solid var(--border2);border-radius:6px;padding:5px 9px;font-size:12.5px;font-family:var(--mono);color:var(--text);width:110px;text-align:right;outline:none;transition:all .15s}
+.inline-input:focus{border-color:var(--accent);background:rgba(79,124,255,.07)}
+.inline-input::placeholder{color:var(--text3)}
+
+/* LABEL DRAG */
+.label-cell{position:relative;min-width:130px}
+.label-drop{min-height:32px;border-radius:8px;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;padding:4px 8px;cursor:pointer;transition:all .2s;position:relative}
+.label-drop.has-label{border-style:solid;border-color:transparent}
+.label-drop.dragover{border-color:var(--accent);background:rgba(79,124,255,.08);transform:scale(1.02)}
+.label-drop.empty-hint{font-size:11px;color:var(--text3)}
+.label-drop .badge{font-size:11.5px;font-weight:500;padding:3px 10px;border-radius:6px;cursor:grab;user-select:none}
+.label-drop .badge:active{cursor:grabbing}
+.label-drop .remove-label{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:16px;height:16px;border-radius:50%;background:var(--surface3);border:none;color:var(--text3);cursor:pointer;font-size:10px;display:none;align-items:center;justify-content:center;transition:all .15s}
+.label-drop:hover .remove-label{display:flex}
+.remove-label:hover{background:var(--red-bg);color:var(--red)}
+
+/* LABEL PALETTE */
+.label-palette{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:20px}
+.palette-title{font-size:11.5px;font-weight:600;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.palette-tags{display:flex;flex-wrap:wrap;gap:8px}
+.palette-tag{padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:500;cursor:grab;user-select:none;transition:all .15s;display:flex;align-items:center;gap:6px}
+.palette-tag:active{cursor:grabbing;opacity:.7;transform:scale(.96)}
+.palette-tag:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.tag-bonus{background:var(--green-bg);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.tag-loss{background:var(--red-bg);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.tag-other{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.tag-adjust{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.tag-dispute{background:var(--purple-bg);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.palette-hint{font-size:11px;color:var(--text3);margin-top:8px;display:flex;align-items:center;gap:5px}
+
+/* ACTION ROW */
+.action-row{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:14px 16px;border-top:1px solid var(--border);background:var(--surface)}
+
+/* STATUS PILL */
+.row-status{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-right:4px;display:inline-block}
+.status-saved{background:var(--green)}
+.status-unsaved{background:var(--amber)}
+.status-empty{background:var(--border2)}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:24px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:999}
+.toast{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;font-size:13px;color:var(--text);display:flex;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toastIn .3s ease;max-width:280px}
+.toast.success{border-color:rgba(34,197,94,.3)}
+.toast-icon{font-size:15px}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(10px)}}
+.toast.out{animation:toastOut .3s ease forwards}
+
+/* DIFF CELL */
+.diff-positive{color:var(--green);font-family:var(--mono);font-size:12.5px}
+.diff-negative{color:var(--red);font-family:var(--mono);font-size:12.5px}
+.diff-zero{color:var(--text3);font-family:var(--mono);font-size:12.5px}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">LeadsMax</div>
+      <div class="logo-name">Leads<span>Max</span> Tracker</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h5v5H2zm7 0h5v5H9zm-7 7h5v5H2zm7 0h5v5H9z"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zM4.5 8.5H7V11H5.5a1 1 0 0 1-1-1V8.5zm4 0H11V10a1 1 0 0 1-1 1H8.5V8.5zM7 5.5V7H4.5V6.5a1 1 0 0 1 1-1H7zm1.5 0h1a1 1 0 0 1 1 1V7H8.5V5.5z"/></svg>
+        Chốt số tháng
+      </a>
+      <div class="nav-section">Reports</div>
+      <a class="nav-item" href="manager-dashboard.html">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M1 11l4-4 3 3 4-5 3 3v3H1z"/></svg>
+        Báo cáo tổng hợp
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 3v1h8V5H4zm0 3v1h8V8H4zm0 3v1h5v-1H4z"/></svg>
+        Export Excel
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="avatar-row">
+        <div class="avatar">TH</div>
+        <div class="avatar-info">
+          <div class="avatar-name">Trần Hương</div>
+          <div class="avatar-role">Account Manager</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="page-title">Chốt số tháng</span>
+        <div class="month-nav">
+          <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+          <span class="month-label" id="monthLabel">Tháng 04 / 2026</span>
+          <button class="month-btn" onclick="changeMonth(1)">›</button>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px">
+          <span class="sync-dot"></span> Affise synced 2m ago
+        </span>
+        <button class="btn btn-ghost btn-sm" onclick="syncAffise()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M13.65 2.35A8 8 0 1 0 15 8h-2a6 6 0 1 1-1.06-3.39L10 6.5h5v-5l-1.35 1.35z"/></svg>
+          Sync Affise
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="saveAll()">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3a1 1 0 0 1 1-1h8.5L14 4.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3zm5 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-9H5v3h5V3z"/></svg>
+          Lưu tất cả
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <!-- STAT CARDS -->
+      <div class="stat-row">
+        <div class="stat-card">
+          <div class="stat-label">Tổng Affise (Confirmed)</div>
+          <div class="stat-value" id="totalAffise">$0.00</div>
+          <div class="stat-sub">actions.confirmed.charge</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tổng Adv Chốt</div>
+          <div class="stat-value" id="totalConfirmed">—</div>
+          <div class="stat-sub">AM nhập tay</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tổng Bonus</div>
+          <div class="stat-value green" id="totalBonus">$0.00</div>
+          <div class="stat-sub">Nhãn = Bonus</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tổng Tổn Thất</div>
+          <div class="stat-value red" id="totalLoss">$0.00</div>
+          <div class="stat-sub">Nhãn = Tổn Thất</div>
+        </div>
+      </div>
+
+      <!-- LABEL PALETTE -->
+      <div class="label-palette">
+        <div class="palette-title">🏷 Kéo nhãn vào cột "Nhãn" bên dưới</div>
+        <div class="palette-tags">
+          <div class="palette-tag tag-bonus" draggable="true" data-label="Bonus" data-type="BONUS"
+               ondragstart="dragStart(event)">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4"/></svg>
+            Bonus
+          </div>
+          <div class="palette-tag tag-loss" draggable="true" data-label="Tổn thất" data-type="TON_THAT"
+               ondragstart="dragStart(event)">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4"/></svg>
+            Tổn thất
+          </div>
+          <div class="palette-tag tag-other" draggable="true" data-label="Khác" data-type="KHAC"
+               ondragstart="dragStart(event)">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4"/></svg>
+            Khác
+          </div>
+          <div class="palette-tag tag-adjust" draggable="true" data-label="Điều chỉnh" data-type="KHAC"
+               ondragstart="dragStart(event)">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4"/></svg>
+            Điều chỉnh
+          </div>
+          <div class="palette-tag tag-dispute" draggable="true" data-label="Tranh chấp" data-type="KHAC"
+               ondragstart="dragStart(event)">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="4"/></svg>
+            Tranh chấp
+          </div>
+        </div>
+        <div class="palette-hint">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" style="opacity:.5"><path d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm0 2a.75.75 0 1 1 0 1.5A.75.75 0 0 1 8 3zm1 9H7v-5h2v5z"/></svg>
+          Kéo thả nhãn vào ô cột "Nhãn" — hoặc click để chọn nhanh
+        </div>
+      </div>
+
+      <!-- TABLE -->
+      <div class="section-header">
+        <div style="display:flex;align-items:baseline;gap:4px">
+          <span class="section-title">Danh sách Advertiser</span>
+          <span class="section-sub" id="recordCount">— ADV</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm1 3v1h8V5H4zm0 3v1h8V8H4zm0 3v1h5v-1H4z"/></svg>
+            Export .xlsx
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:28px;padding-left:14px;text-align:left"></th>
+              <th style="text-align:left">Advertiser</th>
+              <th>Affise (Confirmed)</th>
+              <th>Adv Chốt</th>
+              <th>Thực Nhận</th>
+              <th>Chênh Lệch</th>
+              <th>Phí</th>
+              <th style="text-align:center">Nhãn</th>
+              <th style="text-align:center">Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+        <div class="action-row">
+          <span style="font-size:12px;color:var(--text3)" id="saveHint">Nhập số rồi nhấn Lưu tất cả</span>
+          <button class="btn btn-ghost btn-sm" onclick="resetAll()">Reset</button>
+          <button class="btn btn-primary btn-sm" onclick="saveAll()">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3a1 1 0 0 1 1-1h8.5L14 4.5V13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3zm5 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm3-9H5v3h5V3z"/></svg>
+            Lưu tất cả
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const ADV_DATA = [
+  { id:'68ca74b6b6b92ad41c06916b', name:'2QL Group',         affise:9291.99 },
+  { id:'6954acac94b0769660c4ad2c', name:'CPG Affiliate Partners', affise:22032.00 },
+  { id:'691be59fa163b53062cf52d9', name:'Scale Club',         affise:84392.90 },
+  { id:'6970409194b0769660c4adbf', name:'Ratespecial Interactive', affise:26758.43 },
+  { id:'68d5573636e1daf7bc8a5c6f', name:'FluxMG',            affise:10151.45 },
+  { id:'696dece491d50f14c38df068', name:'Affilic Digital',   affise:17191.46 },
+  { id:'68f74052a06ca43bc5413250', name:'Navona',            affise:10580.55 },
+  { id:'68e3daa90ccf514f788edf86', name:'MaxBounty',         affise:7169.50 },
+  { id:'68f1c684c5832b8903ba1032', name:'Parasol Leads',     affise:5250.50 },
+  { id:'691d6ef20b0bbd9ab595d90e', name:'Xy7Elite',          affise:10301.94 },
+  { id:'68ca67a00ccf514f788edef0', name:'Fluent',            affise:4077.59 },
+  { id:'68f860bed34c460ac6b2f2b1', name:'IEIM Corp',         affise:6886.28 },
+];
+
+// Label config
+const LABEL_CONFIG = {
+  'Bonus':       { cls:'badge-green',  type:'BONUS'    },
+  'Tổn thất':   { cls:'badge-red',    type:'TON_THAT' },
+  'Khác':        { cls:'badge-neutral',type:'KHAC'     },
+  'Điều chỉnh': { cls:'badge-amber',  type:'KHAC'     },
+  'Tranh chấp': { cls:'badge-purple', type:'KHAC'     },
+};
+
+// State per row: { confirmed, received, label, labelType, saved, note }
+const state = {};
+ADV_DATA.forEach(a => { state[a.id] = { confirmed:'', received:'', label:null, labelType:null, saved:false, note:'' }; });
+
+// Month state
+let currentMonth = 4, currentYear = 2026;
+let dragData = null;
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function fmt(n) {
+  if (n === null || n === undefined || n === '') return '—';
+  return '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtDiff(n) {
+  if (n === null || isNaN(n)) return '<span class="diff-zero">—</span>';
+  if (n > 0) return `<span class="diff-positive">+${fmt(n)}</span>`;
+  if (n < 0) return `<span class="diff-negative">${fmt(n)}</span>`;
+  return `<span class="diff-zero">${fmt(n)}</span>`;
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  document.getElementById('recordCount').textContent = `${ADV_DATA.length} ADV`;
+
+  tbody.innerHTML = ADV_DATA.map(adv => {
+    const s = state[adv.id];
+    const conf = parseFloat(s.confirmed) || 0;
+    const recv = parseFloat(s.received) || 0;
+    const diff = s.confirmed !== '' ? (conf - adv.affise) : null;
+    const fee  = (s.confirmed !== '' && s.received !== '') ? (conf - recv) : null;
+    const isEditing = s.confirmed !== '' || s.received !== '';
+    const statusClass = s.saved ? 'status-saved' : (isEditing ? 'status-unsaved' : 'status-empty');
+
+    const lbl = s.label;
+    const lblCfg = lbl ? LABEL_CONFIG[lbl] : null;
+    const labelHtml = lbl
+      ? `<span class="badge ${lblCfg.cls}">${lbl}</span>
+         <button class="remove-label" onclick="removeLabel('${adv.id}')" title="Xóa nhãn">✕</button>`
+      : `<span class="empty-hint">kéo nhãn vào đây</span>`;
+
+    return `<tr id="row-${adv.id}" class="${isEditing&&!s.saved?'editing':''}">
+      <td style="text-align:center;padding:11px 8px 11px 14px">
+        <span class="row-status ${statusClass}" title="${s.saved?'Đã lưu':isEditing?'Chưa lưu':'Chưa nhập'}"></span>
+      </td>
+      <td>
+        <div class="adv-name">${adv.name}</div>
+        <div class="adv-id">${adv.id.slice(-8)}</div>
+      </td>
+      <td><span class="num num-affise">${fmt(adv.affise)}</span></td>
+      <td>
+        <input class="inline-input" type="number" step="0.01" min="0"
+          placeholder="0.00"
+          value="${s.confirmed}"
+          oninput="onInput('${adv.id}','confirmed',this.value)"
+          onfocus="this.select()">
+      </td>
+      <td>
+        <input class="inline-input" type="number" step="0.01" min="0"
+          placeholder="0.00"
+          value="${s.received}"
+          oninput="onInput('${adv.id}','received',this.value)"
+          onfocus="this.select()">
+      </td>
+      <td>${fmtDiff(diff)}</td>
+      <td>${fee !== null ? `<span class="num">${fmt(fee)}</span>` : '<span class="num num-empty">—</span>'}</td>
+      <td class="label-cell">
+        <div class="label-drop ${lbl?'has-label':''}"
+          ondragover="dragOver(event)"
+          ondragleave="dragLeave(event)"
+          ondrop="dropLabel(event,'${adv.id}')"
+          onclick="clickLabelDrop('${adv.id}',event)">
+          ${labelHtml}
+        </div>
+      </td>
+      <td style="text-align:center">
+        <button style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px"
+          onclick="editNote('${adv.id}')" title="${s.note||'Thêm ghi chú'}">
+          ${s.note ? '📝' : '💬'}
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateStats();
+}
+
+function updateStats() {
+  let totalAffise=0, totalConf=0, hasConf=false, totalBonus=0, totalLoss=0;
+  ADV_DATA.forEach(adv => {
+    const s = state[adv.id];
+    totalAffise += adv.affise;
+    if (s.confirmed !== '') {
+      const c = parseFloat(s.confirmed)||0;
+      totalConf += c; hasConf = true;
+      const diff = c - adv.affise;
+      if (s.labelType === 'BONUS' && diff > 0) totalBonus += diff;
+      if (s.labelType === 'TON_THAT' && diff < 0) totalLoss += Math.abs(diff);
+    }
+  });
+  document.getElementById('totalAffise').textContent = fmt(totalAffise);
+  document.getElementById('totalConfirmed').textContent = hasConf ? fmt(totalConf) : '—';
+  document.getElementById('totalBonus').textContent = fmt(totalBonus);
+  document.getElementById('totalLoss').textContent = fmt(totalLoss);
+}
+
+// ── INTERACTIONS ──────────────────────────────────────────────────────────
+function onInput(id, field, val) {
+  state[id][field] = val;
+  state[id].saved = false;
+  renderTable();
+  document.getElementById('saveHint').textContent = 'Có thay đổi chưa lưu…';
+}
+
+function removeLabel(id) {
+  state[id].label = null; state[id].labelType = null;
+  state[id].saved = false;
+  renderTable();
+}
+
+function editNote(id) {
+  const note = prompt('Ghi chú cho ' + ADV_DATA.find(a=>a.id===id).name + ':', state[id].note||'');
+  if (note !== null) { state[id].note = note; renderTable(); }
+}
+
+// ── DRAG & DROP ───────────────────────────────────────────────────────────
+function dragStart(e) {
+  dragData = { label: e.target.dataset.label, type: e.target.dataset.type };
+  e.dataTransfer.effectAllowed = 'copy';
+}
+function dragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'copy';
+  e.currentTarget.classList.add('dragover');
+}
+function dragLeave(e) { e.currentTarget.classList.remove('dragover'); }
+function dropLabel(e, id) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  if (!dragData) return;
+  state[id].label = dragData.label;
+  state[id].labelType = dragData.type;
+  state[id].saved = false;
+  renderTable();
+  showToast('success', `Gán nhãn "${dragData.label}" cho ${ADV_DATA.find(a=>a.id===id).name}`);
+  dragData = null;
+}
+
+// Click to pick label (quick select)
+function clickLabelDrop(id, e) {
+  if (e.target.classList.contains('remove-label')) return;
+  const labels = Object.keys(LABEL_CONFIG);
+  const cur = state[id].label;
+  const idx = cur ? labels.indexOf(cur) : -1;
+  const next = labels[(idx + 1) % labels.length];
+  state[id].label = next;
+  state[id].labelType = LABEL_CONFIG[next].type;
+  state[id].saved = false;
+  renderTable();
+}
+
+// ── SAVE ──────────────────────────────────────────────────────────────────
+function saveAll() {
+  let count = 0;
+  ADV_DATA.forEach(adv => {
+    if (state[adv.id].confirmed !== '' || state[adv.id].received !== '') {
+      state[adv.id].saved = true; count++;
+    }
+  });
+  renderTable();
+  document.getElementById('saveHint').textContent = `${count} record đã lưu`;
+  showToast('success', `Đã lưu ${count} record thành công`);
+}
+
+function resetAll() {
+  ADV_DATA.forEach(adv => { state[adv.id] = { confirmed:'', received:'', label:null, labelType:null, saved:false, note:'' }; });
+  renderTable();
+  document.getElementById('saveHint').textContent = 'Nhập số rồi nhấn Lưu tất cả';
+}
+
+// ── MONTH NAV ─────────────────────────────────────────────────────────────
+function changeMonth(dir) {
+  currentMonth += dir;
+  if (currentMonth > 12) { currentMonth = 1; currentYear++; }
+  if (currentMonth < 1)  { currentMonth = 12; currentYear--; }
+  document.getElementById('monthLabel').textContent =
+    `Tháng ${String(currentMonth).padStart(2,'0')} / ${currentYear}`;
+}
+
+// ── SYNC (demo) ───────────────────────────────────────────────────────────
+function syncAffise() {
+  showToast('info', 'Đang pull Affise API…');
+  setTimeout(() => {
+    ADV_DATA.forEach(a => { a.affise = a.affise * (0.97 + Math.random() * 0.06); });
+    renderTable();
+    showToast('success', 'Sync Affise thành công — affise_amount đã cập nhật');
+  }, 1200);
+}
+
+// ── TOAST ─────────────────────────────────────────────────────────────────
+function showToast(type, msg) {
+  const wrap = document.getElementById('toastWrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type === 'success' ? 'success' : ''}`;
+  el.innerHTML = `<span class="toast-icon">${type==='success'?'✓':'⟳'}</span><span>${msg}</span>`;
+  wrap.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 300);
+  }, 2500);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderTable();
+</script>
+</body>
+</html>
